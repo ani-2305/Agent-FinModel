@@ -8,140 +8,147 @@ FINANCIAL_PROMPTS = {
 
     # Financial Assistant Agent prompt for understanding and executing tasks
     "FINANCIAL_AGENT_PROMPT": (
-        "You are a financial assistant agent designed to help with various tasks such as assisting with PowerPoint presentations; "
-        "creating, editing, and assisting with Excel financial models, and generating charts or reports. "
-        "Your goal is to execute tasks based on the user's natural language commands. Ensure all commands are executed sequentially to avoid collision "
-        "and ensure accurate task completion. If you need additional user input, request it directly through the chatbot. Once a task is completed, confirm completion by saying 'Task completed. How else may I assist you?'. "
-        "Do not solicit further user requests."
-        "Note: the user may provide a 'file_path' variable containing the full path to the file. If 'file_path' is provided, you should use it directly for file operations. "
-        "If the 'file_path' is not provided but the user provides information as to the location of the file in their query, piece together the full file path autonomously. "
-        "Note: be sure to construct the full paths of files based on user query, if not already provided, to ensure the highest accuracy."
-        "If the 'file_path' is not provided but was previously set during the conversation, use the stored file path to perform subsequent operations unless the user provides a new one."
+        "You are a financial assistant agent embedded in an Excel environment, designed to help users build, edit, and enhance financial models directly within Excel. "
+        "Your primary objective is to streamline financial model creation, including three-statement models, forecast generation, assumption updates, and formatting tasks, by responding accurately to the user's natural language commands. "
+        "Execute tasks sequentially to prevent conflicts and ensure consistent results within the Excel workbook. "
+        "If additional user input is needed to clarify or complete a task, ask the user directly through the chatbot interface. Once a task is finished, confirm completion by stating, 'Task completed. How else may I assist you?' "
+        "Do not solicit further user input proactively, focusing only on responding to specific requests. "
+        "Use the active workbook within Excel as the template document containing all the data and info necessary to generate the financial model of the user's choice. "
+        "Always prioritize accuracy, user clarity, and efficiency, making the modeling process seamless and intuitive within Excel."
     ),
+
     #If user response is lacking, terminate the conversation with ##TERMINATE##.$basic_user_information"
 
-
-    # Change font in PowerPoint slide
-    "CHANGE_FONT_PROMPT": (
-        "This skill changes the font in a PowerPoint slide or an Excel spreadsheet. "
-        "If file path is not provided, use currently opened file. "
-        "Extract the font name, size, and slide index from the user's input. "
-        "Ensure the font is applied correctly to all text elements on the specified slide or cell. "
-        "User may specify the font name, size, and target (e.g., slide index for PowerPoint or cell range for Excel). "
-        "For example, if the user says 'Change the font to Arial, size 18 on slide 3', you should return: "
-        "{'font_name': 'Arial', 'font_size': 18, 'slide_index': 3}."
-        "If the user says 'Change the font to Calibri, size 12 in cells A1:B10 on sheet 1', return: "
-        "{'file_type': 'excel', 'font_name': 'Calibri', 'font_size': 12, 'target_index': 0, 'cell_range': 'A1:B10'}."
-        "If any parameters are missing, use default values: font name as 'Arial', font size as '12', and the first slide (for PowerPoint) or cell 'A1' (for Excel). "
-        "If only some parameters are provided, use defaults for missing ones and user-specified values for the rest."
+    # 1. Extract Financial Statements
+    "EXTRACT_FINANCIAL_STATEMENTS_PROMPT": (
+        "This skill extracts historical financial statements (Income Statement, Balance Sheet, Cash Flow Statement) from an Excel file provided by the user. "
+        "Extract the 'file_path' from the user's input. If the 'file_path' is not provided, use the active workbook in Excel. "
+        "Ensure that the data is read accurately and stored for further processing. "
+        "For example, if the user says 'Please extract the financial statements from Financials.xlsx', you should return: "
+        "{'file_path': 'Financials.xlsx'}. "
+        "If the user does not provide a file path, assume the active workbook."
     ),
 
-    # Modify a chart in PowerPoint or Excel
-    "MODIFY_CHART_PROMPT": (
-        "This skill modifies a chart in either a PowerPoint slide or an Excel spreadsheet. Extract the file type (PowerPoint, Excel), chart type, color, slide index (PowerPoint), or data range (Excel) from the user's input. "
-        "If file path is not provided, use currently opened file. "
-        "Ensure the chart is updated correctly with specified modifications. "
-        "For example, if user says 'Change the chart on slide 2 to a pie chart and make it red', return: "
-        "{'file_type': 'powerpoint', 'chart_type': 'Pie', 'chart_color': 'FF0000', 'slide_index': 1}. "
-        "If user says 'Create a bar chart using data from A1 to B20 and make it green in Excel', return: "
-        "{'file_type': 'excel', 'chart_type': 'Bar', 'chart_color': '00FF00', 'data_range': 'A1:B20'}. "
-        "If any parameters are missing, use default values: file type as 'powerpoint', chart type as 'Bar', chart color as 'blue', slide index as the first slide (PowerPoint), or data range as 'A1:B10' (Excel). "
-        "If some parameters are provided, use defaults for missing ones and user-specified values for the rest."
+    # 2. Collect User Assumptions
+    "COLLECT_USER_ASSUMPTIONS_PROMPT": (
+        "This skill collects user-provided assumptions from an Excel sheet named 'Assumptions' within the workbook. "
+        "Extract the 'file_path' if specified; otherwise, use the active workbook. "
+        "Ensure that all assumptions are read correctly and stored for use in forecasting. "
+        "Example: 'Use the assumptions in Assumptions.xlsx' yields {'file_path': 'Assumptions.xlsx'}. "
+        "If no file is specified, use the active workbook."
     ),
 
-
-    # Adjust bullet points in a PowerPoint slide
-    "ADJUST_BULLET_POINTS_PROMPT": (
-        "This skill adjusts bullet points in a PowerPoint slide. Extract the slide index and bullet style from the user's input. "
-        "If file path is not provided, use currently opened file. "
-        "Ensure all bullet points on the specified slide are consistent and formatted correctly. "
-        "Extract the slide index and bullet style level from the user's input. "
-        "For example, if the user says 'Change bullet points on slide 2 to second-level bullets', you should return: "
-        "{'slide_index': 1, 'bullet_style': 1}. "
-        "If the user says 'Use top-level bullets on slide 4', return: {'slide_index': 3, 'bullet_style': 0}."
-        "If any of these parameters are missing, use default values: bullet style as top-level bullets (level 0) and the first slide. "
-        "If only some parameters are provided, use the defaults for missing ones and user-specified values for the rest."
-
+    # 3. Validate User Inputs
+    "VALIDATE_USER_INPUTS_PROMPT": (
+        "This skill validates the collected user assumptions to ensure they are within acceptable ranges. "
+        "Check for missing values and values that fall outside expected parameters. "
+        "If any issues are found, provide a clear message indicating which inputs need attention. "
+        "No parameters need to be extracted from the user's input for this skill."
     ),
 
-    # Insert or modify an equation in Excel
-    "INSERT_EQUATION_PROMPT": (
-        "This skill inserts or modifies an equation in an Excel sheet. Extract the cell reference and the formula from the user's input. "
-        "If file path is not provided, use currently opened file. "
-        "If the sheet name is not provided, use the active sheet. "
-        "Ensure the formula is applied correctly to the specified cell. "
-        "Example: 'In cell A3 of Sheet1, insert the formula SUM(A1:A2)' yields {'cell': 'A3', 'equation': '=SUM(A1:A2)', 'sheet_name': 'Sheet1'}. "
-        "Use defaults for missing parameters: cell 'A1', equation '=SUM(A1:A2)', current file, active sheet."
-        "If the user says 'Insert the formula AVERAGE(B1:B5) into cell B10', return: {'cell': 'B10', 'equation': '=AVERAGE(B1:B5)'}."
-        "If only some parameters are provided, use the defaults for missing ones and user-specified values for the rest."
+    # 4. Build Historical Model
+    "BUILD_HISTORICAL_MODEL_PROMPT": (
+        "This skill organizes and structures the extracted historical financial data for modeling purposes. "
+        "No additional parameters are required from the user's input. "
+        "Ensure that the historical data is clean, formatted consistently, and ready for analysis."
     ),
 
-    # Fill data in an Excel sheet
-    "FILL_DATA_PROMPT": (
-        "This skill fills data in an Excel sheet based on a user-defined pattern. Extract the starting cell and the pattern type from the user's input. "
-        "If file path is not provided, use currently opened file. "
-        "Ensure the data is filled according to the specified pattern, whether it's incremental, repeating, or based on a series. "
-        "Extract the starting cell and the pattern type from the user's input. "
-        "For example, if the user says 'Fill data starting from cell B2 in an incremental pattern', you should return: "
-        "{'start_cell': 'B2', 'pattern_type': 'incremental'}. "
-        "If the user says 'Repeat the data starting from A1', return: {'start_cell': 'A1', 'pattern_type': 'repeat'}."
-        "If any parameters are missing, use default values: start cell as 'A1' and pattern type as 'incremental'. "
-        "If some parameters are provided, use the defaults for missing ones and user-specified values for the rest."
-
+    # 5. Forecast Financials
+    "FORECAST_FINANCIALS_PROMPT": (
+        "This skill forecasts future financial statements based on historical data and user assumptions. "
+        "Extract the number of years to forecast if specified by the user; otherwise, use a default of 5 years. "
+        "Example: 'Forecast the financials for the next 3 years' yields {'forecast_years': 3}. "
+        "Ensure that the forecasts are calculated accurately using the assumptions provided."
     ),
 
-    # Create New Document Prompt
-    "CREATE_NEW_PROMPT": (
-        "This skill creates a new blank document (Word, PowerPoint, or Excel). "
-        "If the user specifies a name for the document, use it. "
-        "If any of these parameters are missing, use default values: file name as 'UntitledFile'. "
-        "If only some parameters are provided, use the defaults for missing ones and user-specified values for the rest. "
-        "Ensure that the file is saved correctly and confirm completion of the task."
+    # 6. Apply Accounting Policies
+    "APPLY_ACCOUNTING_POLICIES_PROMPT": (
+        "This skill applies specified accounting policies to the financial model. "
+        "No additional parameters are required from the user's input unless the user specifies particular policies to apply or adjust. "
+        "Ensure that all relevant policies are correctly implemented in the model."
     ),
 
-    # Open an Application Prompt
-    "OPEN_APPLICATION_PROMPT": (
-        "This skill opens a specified application on the user's desktop. Extract the application name from the user's input. "
-        "Supported applications are 'PowerPoint', 'Excel', and 'Word'. "
-        "For example, if the user says 'Please open Excel', you should return: {'app_name': 'excel'}. "
-        "If the user says 'Open Microsoft Word for me', return: {'app_name': 'word'}. "
-        "Ensure that you extract the correct application name in lowercase letters and pass it to the skill function. "
-        "If the user does not specify a supported application, return an error message indicating that the application is not specified or unsupported. "
-        "If multiple applications are mentioned, prioritize the first one mentioned."
+    # 7. Implement Depreciation Methods
+    "IMPLEMENT_DEPRECIATION_METHODS_PROMPT": (
+        "This skill calculates depreciation expenses based on the selected methods and useful lives of assets. "
+        "Extract any specific depreciation method or useful life if the user provides them; otherwise, use the default methods specified in the accounting policies. "
+        "Example: 'Use the double-declining balance method for depreciation over 10 years' yields {'depreciation_method': 'double-declining', 'useful_life': 10}."
     ),
 
-    # Open a File Prompt
-    "OPEN_FILE_PROMPT": (
-        "This skill opens a file in PowerPoint, Excel, or Word. Ask the user for the file type and file path they wish to open. "
-        "For example, if the user says 'Open the Excel file located at /Documents/Report.xlsx', return: "
-        "{'file_type': 'excel', 'file_path': '/Documents/Report.xlsx'}. "
-        "If the user says 'Open a PowerPoint file at C:/Presentations/Annual.pptx', return: {'file_type': 'powerpoint', 'file_path': 'C:/Presentations/Annual.pptx'}. "
-        "Ensure the path is valid, and open the file using the default application."
+    # 8. Calculate Working Capital
+    "CALCULATE_WORKING_CAPITAL_PROMPT": (
+        "This skill calculates changes in working capital accounts based on user assumptions and historical trends. "
+        "Extract any specific assumptions regarding working capital components if provided by the user. "
+        "Ensure that accounts receivable, inventory, and accounts payable are projected accurately."
     ),
 
-    # Open the Root Path Prompt
-    "GET_ROOT_PATH_PROMPT": (
-        "This skill constructs the full path to a file located within the user's home directory, including subdirectories under standard system folders like Desktop, Documents, Downloads, etc. "
-        "Extract the file name and the folder path from the user's input and return the absolute file path. "
-        "The folder path may include subdirectories (e.g., 'Documents/Spreadsheet Tests', 'Downloads/Data/2021'). "
-        "For example, if the user says 'Get the path for example.txt in Documents/Reports', return the full path like: "
-        "'/home/user/Documents/Reports/example.txt'. "
-        "Another example: if the user says 'Find the file data.csv in Downloads/Data/July', return '/home/user/Downloads/Data/July/data.csv'. "
-        "If the user specifies a nested folder, ensure that all subdirectories are included in the path. "
-        "If the user does not specify a folder, assume the home directory and return the full path from there. "
-        "Handle both absolute and relative paths appropriately. "
+    # 9. Implement Tax Calculations
+    "IMPLEMENT_TAX_CALCULATIONS_PROMPT": (
+        "This skill calculates tax expenses and updates the Income Statement accordingly. "
+        "Extract the tax rate if specified by the user; otherwise, use the default rate from the assumptions. "
+        "Example: 'Use a tax rate of 28%' yields {'tax_rate': 0.28}. "
+        "Ensure that the tax calculations are accurate and compliant with the specified rate."
     ),
 
-    # Create a chart in Excel
-    "CREATE_CHART_PROMPT": (
-        "This skill creates a chart in an Excel sheet. Extract the data range and chart type from the user's input. "
-        "If file path is not provided, use currently opened file. "
-        "Ensure the chart is created with the correct data and formatting. "
-        "For example, if the user says 'Create a line chart using data from A1 to B10', you should return: "
-        "{'data_range': 'A1:B10', 'chart_type': 'line'}. "
-        "If the user says 'Create a bar chart from C1 to D20', return: {'data_range': 'C1:D20', 'chart_type': 'bar'}."
-        "If any of these parameters are missing, use default values: data range as 'A1:B10', chart type as 'Bar', and slide index as the first slide. "
-        "If only some parameters are provided, use the defaults for missing ones and user-specified values for the rest."
+    # 10. Insert Formulas
+    "INSERT_FORMULAS_PROMPT": (
+        "This skill inserts necessary formulas into the Excel model to enable dynamic calculations. "
+        "No additional parameters are required from the user's input unless specific formulas or cells are mentioned. "
+        "Ensure that all key calculations are correctly implemented using Excel formulas."
+    ),
+
+    # 11. Render Excel Model
+    "RENDER_EXCEL_MODEL_PROMPT": (
+        "This skill renders the financial model into an Excel file using a specified template. "
+        "Extract 'template_path' and 'output_path' from the user's input if provided; otherwise, use default paths. "
+        "Example: 'Use Template.xlsx and save the model as OutputModel.xlsx' yields {'template_path': 'Template.xlsx', 'output_path': 'OutputModel.xlsx'}. "
+        "Ensure that the final model is properly formatted and saved."
+    ),
+
+    # 12. File Management - Validate File Path
+    "VALIDATE_FILE_PATH_PROMPT": (
+        "This skill validates whether a given file path exists. "
+        "Extract the 'file_path' from the user's input. "
+        "Example: 'Check if FinancialData.xlsx exists' yields {'file_path': 'FinancialData.xlsx'}. "
+        "Provide a confirmation if the file exists or an error message if it does not."
+    ),
+
+    # 13. File Management - Save File
+    "SAVE_FILE_PROMPT": (
+        "This skill saves data to a specified file path. "
+        "Extract the 'output_path' from the user's input. "
+        "Example: 'Save the model as FinalModel.xlsx' yields {'output_path': 'FinalModel.xlsx'}. "
+        "Ensure that the data is saved correctly to the specified location."
+    ),
+
+    # 14. File Management - Backup File
+    "BACKUP_FILE_PROMPT": (
+        "This skill creates a backup of a specified file. "
+        "Extract the 'file_path' from the user's input. "
+        "Example: 'Backup FinancialModel.xlsx' yields {'file_path': 'FinancialModel.xlsx'}. "
+        "Ensure that the backup is created successfully."
+    ),
+
+    # 15. Format Excel Sheets
+    "FORMAT_EXCEL_SHEETS_PROMPT": (
+        "This skill applies consistent formatting to Excel sheets to enhance readability. "
+        "No additional parameters are required from the user's input unless specific formatting preferences are mentioned. "
+        "Ensure that fonts, alignments, borders, and number formats are applied appropriately."
+    ),
+
+    # 16. Apply Conditional Formatting
+    "APPLY_CONDITIONAL_FORMATTING_PROMPT": (
+        "This skill applies conditional formatting to highlight key data points in Excel sheets. "
+        "No additional parameters are required unless the user specifies particular conditions or formatting styles. "
+        "Ensure that important metrics (e.g., negative numbers) are highlighted according to best practices or user preferences."
+    ),
+
+    # 17. Provide Model Summary
+    "PROVIDE_MODEL_SUMMARY_PROMPT": (
+        "This skill generates a summary of the financial model's key outputs. "
+        "No additional parameters are required from the user's input unless specific metrics are requested. "
+        "Ensure that the summary includes essential information such as final year revenue, net income, total assets, and total equity. "
+        "Example: 'Provide a summary focusing on net income and cash flow' would yield a summary highlighting those metrics."
     )
 }
 
