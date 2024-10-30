@@ -1,166 +1,38 @@
+# chatbot_interface.py
+
 import tkinter as tk
-from tkinter import scrolledtext, filedialog
-import asyncio
-import customtkinter as ctk 
+import customtkinter as ctk
+import os
 import re
-import os  # Import os to work with file paths
+import xlwings as xw
+import threading
+import asyncio
 
 # Import the financial assistant agent
-from agent_financial.financial_assistant import FinancialAssistantAgent
+from agent_finmodel.financial_assistant import FinancialAssistantAgent
 
 # Initialize the financial assistant agent
 agent = FinancialAssistantAgent()
 
-# Global variable to store the file path
+# Global variables
 file_path = None
 root = None
 
-# Define the skills that require a file path
-skills_requiring_file_path = ['open_file', 'change_font', 'modify_chart', 'adjust_bullet_points', 'insert_equation', 'fill_data', 'create_chart']
-
-def parse_file_path(user_input):
-    # Extract file and folder names using regex
-    pattern = r'(file|folder|directory)\s["\'](.*?)["\']'
-    matches = re.findall(pattern, user_input, re.IGNORECASE)
-    if not matches:
-        return None  # No matches found
-
-    file_name = None
-    folder_names = []
-    for item in matches:
-        if item[0].lower() == 'file':
-            file_name = item[1]
-        elif item[0].lower() in ['folder', 'directory']:
-            folder_names.append(item[1])
-
-    if not file_name:
-        return None  # File name is required
-
-    # Build the path starting from the user's home directory
-    home_dir = os.path.expanduser('~')
-    path_parts = [home_dir] + folder_names[::-1]  # Reverse the folder names
-    folder_path = os.path.join(*path_parts)
-    full_file_path = os.path.join(folder_path, file_name)
-    return full_file_path
-
-def detect_intent(user_input):
-    user_input = user_input.lower()
-    # Improved pattern matching to extract keywords
-    if "open" in user_input and any(app in user_input for app in ['excel', 'word', 'powerpoint']):
-        return 'open_application'
-    elif "create new" in user_input or "create a new" in user_input:
-        return 'create_new'
-    elif "open file" in user_input:
-        full_file_path = parse_file_path(user_input)
-        if full_file_path:
-            return 'open_file', full_file_path
-        else:
-            return 'open_file'
-    else:
-        skill_keywords = {
-            'change font': 'change_font',
-            'modify chart': 'modify_chart',
-            'adjust bullet points': 'adjust_bullet_points',
-            'insert equation': 'insert_equation',
-            'fill data': 'fill_data',
-            'create chart': 'create_chart',
-            'open file': 'open_file',
-        }
-
-        for keyword, intent in skill_keywords.items():
-            if keyword in user_input:
-                return intent
-
-def ask_for_file_path():
-    global file_path
-    add_message("Agent", "Please select the file that you are working on.")
-    root.update()
-    # Open file dialog for the user to select a file
-    selected_file_path = filedialog.askopenfilename()
-    if selected_file_path:
-        file_path = selected_file_path.strip()
-        print(f"File path entered: {file_path}")
-        return file_path
-    else:
-        return None
-
-def handle_query(event=None):
-    global file_path
-    user_input = input_box.get("1.0", "end").strip()
-    intent_result = detect_intent(user_input)
-
-    if isinstance(intent_result, tuple):
-        intent = intent_result[0]
-        if intent == 'open_file':
-            file_path = intent_result[1]
-    else:
-        intent = intent_result
-
-    # Check if file path is required and prompt for it if not already set
-    if intent in skills_requiring_file_path and not file_path:
-        file_path = ask_for_file_path()
-
-    if not file_path and intent in skills_requiring_file_path:
-        add_message("Agent", "File path is required for this operation.")
-        input_box.delete("1.0", "end")
-        return
-
-    print(f"File path being used: {file_path}")
-
-    # Asynchronous function to call the agent and get the response
-    async def query_agent(user_input, file_path):
-        if file_path:
-            result = await agent.user_proxy_agent.a_initiate_chat(
-                agent.agent,
-                message=user_input,
-                cache=None,
-                file_path=file_path
-            )
-        else:
-            result = await agent.user_proxy_agent.a_initiate_chat(
-                agent.agent,
-                message=user_input,
-                cache=None
-            )
-        response = result.summary
-        add_message("You", user_input)
-        add_message("Agent Fin", response)
-    
-    asyncio.run(query_agent(user_input, file_path))
-    input_box.delete("1.0", "end")
-
-def adjust_input_box_height(event=None):
-    """Adjust the height of the input box based on the content."""
-    content = input_box.get("1.0", "end").strip()
-    lines = content.count("\n") + 1
-    new_height = min(max(lines * 20, 60), 200)
-    input_box.configure(height=new_height)
-
-def add_message(sender, message):
-    # Define fonts using CTkFont
-    montserrat_regular = ctk.CTkFont(family="Montserrat", size=12)
-    montserrat_semibold = ctk.CTkFont(family="Montserrat", size=12, weight="bold")
-
-    # Create a frame for each message
-    message_frame = ctk.CTkFrame(chat_frame, fg_color="transparent")
-    message_frame.pack(fill="x", padx=10, pady=5)
-
-    # Sender label
-    sender_label = ctk.CTkLabel(message_frame, text=f"{sender}:", font=montserrat_semibold, anchor="w")
-    sender_label.pack(fill="x")
-
-    # Message label
-    message_label = ctk.CTkLabel(message_frame, text=message, font=montserrat_regular, anchor="w", justify="left", wraplength=320)
-    message_label.pack(fill="x", anchor="w")
-
-    # Scroll to the bottom
-    chat_canvas.update_idletasks()
-    chat_canvas.yview_moveto(1.0)
+def show_chatbot():
+    """
+    Function to show the chatbot interface.
+    This function can be called from Excel via xlwings.
+    """
+    threading.Thread(target=run_chatbot).start()
 
 def run_chatbot():
-    global root, chat_frame, chat_canvas
+    global root, chat_frame, chat_canvas, input_box
+
+    # Initialize customtkinter appearance
     ctk.set_appearance_mode("System")
     ctk.set_default_color_theme("blue")
+
+    # Create the main window
     root = ctk.CTk()
     root.title("Agent Fin")
     root.geometry("415x465")
@@ -190,7 +62,6 @@ def run_chatbot():
     chat_frame.bind("<Configure>", on_frame_configure)
 
     # Create input box for user to type queries with rounded corners
-    global input_box
     montserrat_regular = ctk.CTkFont(family="Montserrat", size=12)
     montserrat_semibold = ctk.CTkFont(family="Montserrat", size=12, weight="bold")
 
@@ -212,5 +83,89 @@ def run_chatbot():
     # Start the main GUI loop
     root.mainloop()
 
+def adjust_input_box_height(event=None):
+    """Adjust the height of the input box based on the content."""
+    content = input_box.get("1.0", "end").strip()
+    lines = content.count("\n") + 1
+    new_height = min(max(lines * 20, 60), 200)
+    input_box.configure(height=new_height)
+
+def add_message(sender, message):
+    """Add a message to the chat interface."""
+    # Define fonts using CTkFont
+    montserrat_regular = ctk.CTkFont(family="Montserrat", size=12)
+    montserrat_semibold = ctk.CTkFont(family="Montserrat", size=12, weight="bold")
+
+    # Create a frame for each message
+    message_frame = ctk.CTkFrame(chat_frame, fg_color="transparent")
+    message_frame.pack(fill="x", padx=10, pady=5)
+
+    # Sender label
+    sender_label = ctk.CTkLabel(message_frame, text=f"{sender}:", font=montserrat_semibold, anchor="w")
+    sender_label.pack(fill="x")
+
+    # Message label
+    message_label = ctk.CTkLabel(message_frame, text=message, font=montserrat_regular, anchor="w",
+                                justify="left", wraplength=320)
+    message_label.pack(fill="x", anchor="w")
+
+    # Scroll to the bottom
+    chat_canvas.update_idletasks()
+    chat_canvas.yview_moveto(1.0)
+
+def handle_query(event=None):
+    """Handle the user's query and get a response from the agent."""
+    user_input = input_box.get("1.0", "end").strip()
+    input_box.delete("1.0", "end")
+    add_message("You", user_input)
+
+    # Get the active workbook path
+    try:
+        wb = xw.Book.caller()
+        file_path = wb.fullname
+    except Exception:
+        file_path = None
+
+    # Asynchronous function to call the agent and get the response
+    def query_agent(user_input, file_path):
+        # Prepare context
+        if file_path:
+            context = {
+                'file_path': file_path,
+                'output_path': 'Financial_Model_Output.xlsx',
+                'template_path': 'Financial_Model_Template.xlsx'
+            }
+        else:
+            context = {
+                'file_path': 'Financial_Model_Input.xlsx',
+                'output_path': 'Financial_Model_Output.xlsx',
+                'template_path': 'Financial_Model_Template.xlsx'
+            }
+
+        # Run the agent asynchronously
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(agent.handle_request(user_input, context))
+        finally:
+            loop.close()
+
+        # Process the result
+        if 'error' in result:
+            response = f"Error: {result['error']}"
+        else:
+            response = result.get('message', 'Task completed.')
+            if 'summary' in result:
+                summary = result['summary']
+                response += "\nModel Summary:"
+                for key, value in summary.items():
+                    response += f"\n{key}: {value}"
+
+        # Add the agent's response to the chat
+        add_message("Agent Fin", response)
+
+    # Run the agent query in a separate thread to avoid blocking the GUI
+    threading.Thread(target=query_agent, args=(user_input, file_path)).start()
+
 if __name__ == "__main__":
-    run_chatbot()
+    show_chatbot()
