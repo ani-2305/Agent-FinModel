@@ -21,8 +21,8 @@ def implement_depreciation_methods() -> dict:
         depreciation_method = accounting_policies['Depreciation Method']
 
         if depreciation_method == 'Straight-Line':
-            pp&e = balance_sheet['Property, Plant & Equipment (PP&E)'].iloc[-1]
-            depreciation_expense = pp&e / useful_life
+            pp_e = balance_sheet['Property, Plant & Equipment (PP&E)'].iloc[-1]
+            depreciation_expense = pp_e / useful_life
         else:
             # Implement other methods if needed
             depreciation_expense = 0
