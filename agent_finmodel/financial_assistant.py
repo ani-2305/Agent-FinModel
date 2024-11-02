@@ -1,7 +1,7 @@
 # financial_assistant.py
 
 from string import Template
-import autogen  # Ensure you have autogen installed
+import autogen
 import openai
 import os
 from dotenv import load_dotenv
