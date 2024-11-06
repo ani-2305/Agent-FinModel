@@ -1,7 +1,7 @@
 # apply_accounting_policies.py
 
 from . import shared_state
-from .error_handling import handle_error
+from agent_finmodel.skills.error_handling import handle_error
 
 def apply_accounting_policies() -> dict:
     """

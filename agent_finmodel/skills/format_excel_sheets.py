@@ -1,6 +1,6 @@
 # format_excel_sheets.py
 
-from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.styles import Font, Alignment, Border, Side # type: ignore
 from .error_handling import handle_error
 
 def format_excel_sheets(workbook) -> dict:

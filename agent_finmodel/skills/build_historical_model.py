@@ -1,8 +1,8 @@
 # build_historical_model.py
 
-import pandas as pd
+import pandas as pd # type: ignore
 from . import shared_state
-from .error_handling import handle_error
+from agent_finmodel.skills.error_handling import handle_error
 
 def build_historical_model() -> dict:
     """

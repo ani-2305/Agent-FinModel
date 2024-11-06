@@ -1,9 +1,9 @@
 # apply_conditional_formatting.py
 
-from openpyxl.formatting import Rule
-from openpyxl.styles import PatternFill
-from openpyxl.styles.differential import DifferentialStyle
-from .error_handling import handle_error
+from openpyxl.formatting import Rule # type: ignore
+from openpyxl.styles import PatternFill # type: ignore
+from openpyxl.styles.differential import DifferentialStyle # type: ignore
+from agent_finmodel.skills.error_handling import handle_error
 
 def apply_conditional_formatting(workbook) -> dict:
     """

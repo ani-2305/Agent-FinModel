@@ -1,7 +1,7 @@
 # executor_agent.py
 
-from skills import shared_state
-from autogen import UserProxyAgent
+from agent_finmodel.skills import shared_state
+from autogen import UserProxyAgent # type: ignore
 
 class ExecutorAgent:
     def __init__(self, user_proxy_agent: UserProxyAgent):

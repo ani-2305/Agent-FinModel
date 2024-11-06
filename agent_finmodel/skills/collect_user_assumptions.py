@@ -1,6 +1,6 @@
 # collect_user_assumptions.py
 
-import pandas as pd
+import pandas as pd # type: ignore
 from . import shared_state
 from .error_handling import handle_error
 

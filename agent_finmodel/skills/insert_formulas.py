@@ -1,7 +1,7 @@
 # insert_formulas.py
 
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
+from openpyxl import Workbook # type: ignore
+from openpyxl.utils import get_column_letter # type: ignore
 from . import shared_state
 from .error_handling import handle_error
 

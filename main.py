@@ -1,6 +1,6 @@
 import os
 import logging
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # Import the financial assistant agent and the chatbot interface
 from agent_finmodel.financial_assistant import FinancialAssistantAgent
@@ -21,11 +21,16 @@ if OPENAI_API_KEY is None:
 # OpenAI API key is expected to be used within the agent or other scripts
 
 def main():
-    # Initialize the FinancialAssistantAgent
+    print("OpenAI API Key:", OPENAI_API_KEY)
+
+    print("Initializing the FinancialAssistantAgent...")
     agent = FinancialAssistantAgent()
-    
-    # Run the chatbot interface with the agent instance
-    show_chatbot(agent_instance=agent)
+    print("FinancialAssistantAgent initialized.")
+
+    print("Launching chatbot interface...")
+    #show_chatbot(agent_instance=agent)
+    print("Chatbot interface launched.")
+
     
 if __name__ == "__main__":
     main()

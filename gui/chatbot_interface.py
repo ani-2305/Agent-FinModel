@@ -1,10 +1,10 @@
 # chatbot_interface.py
 
 import tkinter as tk
-import customtkinter as ctk
+import customtkinter as ctk # type: ignore
 import os
 import re
-import xlwings as xw
+import xlwings as xw # type: ignore
 import threading
 import asyncio
 

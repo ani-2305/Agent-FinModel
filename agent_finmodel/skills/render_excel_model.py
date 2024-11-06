@@ -1,7 +1,7 @@
 # render_excel_model.py
 
-from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import Workbook # type: ignore 
+from openpyxl.utils.dataframe import dataframe_to_rows # type: ignore
 from . import shared_state
 from .format_excel_sheets import format_excel_sheets
 from .apply_conditional_formatting import apply_conditional_formatting
@@ -17,7 +17,7 @@ def render_excel_model(template_path: str, output_path: str) -> dict:
     """
     try:
         # Load the workbook
-        from openpyxl import load_workbook
+        from openpyxl import load_workbook # type: ignore
         wb = load_workbook(template_path)
 
         # Get the sheets

@@ -1,6 +1,6 @@
 # extract_financial_statements.py
 
-import pandas as pd
+import pandas as pd # type: ignore
 import os
 from . import shared_state
 from .error_handling import handle_error
